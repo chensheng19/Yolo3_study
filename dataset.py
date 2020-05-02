@@ -104,9 +104,17 @@ class Dataset(object):
     def parse_annotation(self,annotation):
         line = annotation.split()
         image_path = line[0]
-        
+        if not os.path.exists(image_path):
+            raise KeyError("s% does not exist"%image_path)
+
         image = np.array(cv2.imread(image_path))
         bboxes = np.array(list(map(lambda x:int(float(x)),box.split(','))) for box in line[1:])
+
+        if self.data_aug:
+            image,bboxes = self.random_horizotal_flip(np.copy(image),np.copy(bboxes))
+            image,bboxes = self.random_crop(np.copy(image),np.copy(bboxes))
+            image,bboxes = self.random_translate(np.copy(image),np.copy(bboxes))
+        image = cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
         image,bboxes = utils.image_preprocess(np.copy(image),
                 [self.train_input_sizes,self.train_input_sizes],np.copy(bboxes))
         return image,bboxes
