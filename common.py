@@ -82,6 +82,9 @@ def res_block(input_layer,num_filter):
     return tf.keras.layers.Add()([conv_out,short_cut])
 
 def upsample(input_layer,method = "deconv"):
+    """
+    Double the ouput's h and w
+    """
     assert method in ["resize","deconv"]
     
     if method == "resize":
