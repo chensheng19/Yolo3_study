@@ -7,7 +7,7 @@
 # Editor      : VIM
 # Create time : 2020-04-29
 # File name   : backbone.py 
-# Description : Implement the darknet net
+# Description : Implement the darknet53 
 #
 #=====================================================
 
@@ -46,14 +46,3 @@ def backbone(input_layer):
         out_put = common.res_block(out_put,num_filter = (512,1024))
     
     return branch_1,branch_2,out_put
-
-    
-
-
-
-
-
-
-
-
-
