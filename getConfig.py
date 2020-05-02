@@ -6,7 +6,7 @@
 # File name   : getConfig.py
 # Author      : Chen_Sheng19
 # Date        : 2020-04-29
-# Description : This script is used to read the configuration file "config.ini"
+# Description : This file is used to read the configuration file "config.ini"
 #
 #====================================================
 
