@@ -37,9 +37,8 @@ class Dataset(object):
         self.anchors = np.array(utils.get_anchors(cfg['yolo_anchors']))
         self.anchor_per_scale = cfg['yolo_anchor_per_scale']
         self.max_bbox_per_scale = 150
-        self.train_output_size = self.train_input_sizes // self.strides
 
-        self.annotations = self.load_annotations(dataset_type)
+        self.annotations = self.load_annotation(dataset_type)
         self.num_samples = len(self.annotations)
         self.num_batchs = int(np.ceil(self.num_samples / self.batch_size))
         self.batch_count = 0
@@ -193,8 +192,8 @@ class Dataset(object):
                     
                     label[i][xind,yind,iou_mask,:] = 0
                     label[i][xind,yind,iou_mask,0:4] = bbox_xywh
-                    label[i][xind,yind,iou_mask.4:5] = 1.0
-                    label[i][xind,yind,iou_mask.5:] = smooth_onehot
+                    label[i][xind,yind,iou_mask,4:5] = 1.0
+                    label[i][xind,yind,iou_mask,5:] = smooth_onehot
 
                     bbox_ind = int(bbox_count[i] % self.max_bbox_per_scale)
                     bboxes_xywh[i][bbox_ind,:4] = bbox_xywh
@@ -228,6 +227,7 @@ class Dataset(object):
     def __next__(self):
         with tf.device('/cpu:0'):
             self.train_input_size = random.choice(self.train_input_sizes)
+            self.train_output_size = self.train_input_sizes // self.strides
 
             batch_images = np.zeros((self.batch_size,self.train_input_size,train_input_size,3),dtype=np.float32)
             batch_label_sbbox = np.zeros((self.batch_size,self.train_output_size[0],self.train_output_size[0],self.anchor_per_scale,
