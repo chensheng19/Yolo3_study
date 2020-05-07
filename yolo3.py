@@ -179,7 +179,7 @@ def loss_layer(conv,pred,label,bboxes,i = 0):
     giou = tf.expand_dims(bbox_giou(pred_xywh,label_xywh),axis = -1)
     input_size = tf.cast(input_size,tf.float32)
 
-    bbox_loss_scale = 2.0 - 1.0 * label_xywh[...,2] * label_xywh[...,3] / (input_size ** 2)
+    bbox_loss_scale = 2.0 - 1.0 * label_xywh[...,2:3] * label_xywh[...,3:4] / (input_size ** 2)
     giou_loss = respond_bbox * bbox_loss_scale * (1 - giou)
 
     iou = bbox_iou(pred_xywh[:,:,:,:,np.newaxis,:],bboxes[:,np.newaxis,np.newaxis,np.newaxis,:,:])

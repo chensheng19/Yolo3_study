@@ -55,7 +55,7 @@ def train_step(image_data,target):
 
         for i in range(3):
             conv,pred = pred_result[i*2],pred_result[i*2+1]
-            loss_items = loss_layer(pred,conv,target[i],target[i+3],i)
+            loss_items = loss_layer(conv,pred,target[i],target[i+3],i)
             giou_loss += loss_items[0]
             conf_loss += loss_items[1]
             prob_loss += loss_items[2]
