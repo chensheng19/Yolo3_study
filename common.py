@@ -38,11 +38,11 @@ class BatchNormalization(tf.keras.layers.BatchNormalization):
         training = tf.logical_and(training,self.trainable)
         return super().call(inputs,training)
 
-def conv(input_layer,filters_shape,padding = "same",activation = True,bn = True):
+def conv(input_layer,filter_shape,padding = "same",activation = True,bn = True):
     """
     Argument:
         input_layer:a 4-d tensor,[num_samples,rows,cols,channels]
-        filters_shape:a list containing size of filters and num of filters,[size,num]
+        filter_shape:a list containing size of filters and num of filters,[size,num]
         padding:style of padding,"same" or "valid"
         activation:select activate Z or not
         bn:select BatchNormalization or not
@@ -55,14 +55,14 @@ def conv(input_layer,filters_shape,padding = "same",activation = True,bn = True)
         stride = 2
         input_layer = tf.keras.layers.ZeroPadding2D(((1,0),(1,0)))(input_layer)
 
-    conv = tf.keras.layers.Conv2D(filters=filters_shape[1],kernel_size = filters_shape[0],strides = stride,
+    conv = tf.keras.layers.Conv2D(filters=filter_shape[1],kernel_size = filter_shape[0],strides = stride,
             padding = padding,use_bias = not bn,kernel_regularizer = tf.keras.regularizers.l2(0.0005),
             kernel_initializer = tf.random_normal_initializer(stddev = 0.01),
             bias_initializer = tf.constant_initializer(0.))(input_layer)
     if bn:
         conv = tf.keras.layers.BatchNormalization()(conv)
     if activation:
-        conv = tf,keras.activations.relu(conv,alpha = 0.1)
+        conv = tf.keras.activations.relu(conv,alpha = 0.1)
     return conv
 
 def res_block(input_layer,num_filter):
@@ -76,8 +76,8 @@ def res_block(input_layer,num_filter):
     filters1,filters2 = num_filter
     short_cut = input_layer
 
-    conv_out = conv(input_layer = input_layer,filters_shape = (1,filters1))
-    conv_out = conv(input_layer = conv_out,filters_shape = (3,filters2))
+    conv_out = conv(input_layer = input_layer,filter_shape = (1,filters1))
+    conv_out = conv(input_layer = conv_out,filter_shape = (3,filters2))
 
     return tf.keras.layers.Add()([conv_out,short_cut])
 
@@ -88,9 +88,9 @@ def upsample(input_layer,method = "deconv"):
     assert method in ["resize","deconv"]
     
     if method == "resize":
-        out_put = tf.compat.v1.image.resize(input_layer,(input_layer[1]*2,input_layer[2]*2),method = "nearest")
+        out_put = tf.compat.v1.image.resize(input_layer,(input_layer.shape[1]*2,input_layer.shape[2]*2),method = "nearest")
     elif method == "deconv":
-        out_put = tf.keras.layers.Conv2DTranspose(filters = input_layer[-1],kernel_size = 2,strides = 2,
+        out_put = tf.keras.layers.Conv2DTranspose(filters = input_layer.shape[-1],kernel_size = 2,strides = 2,
                 padding = "same",kernel_initializer = tf.random_normal_initializer())
     return out_put
 

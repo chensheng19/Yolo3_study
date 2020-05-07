@@ -36,7 +36,7 @@ def yolo3(input_layer):
     conv = common.conv(conv,(1,512))
 
     conv_l_branch = common.conv(conv,(3,1024))
-    l_output = common.conv(conv_l_branch,(1,3 * (NUM_CLASS + 5)),False,False)
+    l_output = common.conv(conv_l_branch,(1,3 * (NUM_CLASS + 5)),activation = False,bn = False)
 
     conv = common.conv(conv,(1,256))
     conv = common.upsample(conv,"resize")
@@ -49,9 +49,11 @@ def yolo3(input_layer):
     conv = common.conv(conv,(1,256))
 
     conv_m_branch = common.conv(conv,(3,512))
-    m_output = common.conv(conv_m_branch,(1,3 * (NUM_CLASS + 5)),False,False)
+    m_output = common.conv(conv_m_branch,(1,3 * (NUM_CLASS + 5)),activation = False,bn = False)
 
     conv = common.conv(conv,(1,128))
+    conv = common.upsample(conv,"resize")
+    
     conv = tf.concat([conv,branch_1],axis = -1)
     conv = common.conv(conv,(1,128))
     conv = common.conv(conv,(3,256))
@@ -60,7 +62,7 @@ def yolo3(input_layer):
     conv = common.conv(conv,(1,128))
     
     conv_s_branch = common.conv(conv,(3,256))
-    s_output = common.conv(conv_s_branch,(1,3 * (NUM_CLASS + 5)),False,False)
+    s_output = common.conv(conv_s_branch,(1,3 * (NUM_CLASS + 5)),activation = False,bn = False)
     
     return [s_output,m_output,l_output]
 

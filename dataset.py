@@ -31,6 +31,7 @@ class Dataset(object):
         self.data_aug = cfg['train_data_augement'] if dataset_type == 'train' else cfg['test_data_augement']
 
         self.train_input_sizes = cfg['train_input_size']
+        self.train_input_size = random.choice(self.train_input_sizes)
         self.strides = np.array(cfg['yolo_strides'])
         self.classes = utils.read_class_names(cfg['yolo_classes_names'])
         self.num_classes = len(self.classes)
@@ -52,7 +53,7 @@ class Dataset(object):
 
     def random_horizotal_flip(self,image,bboxes):
         if random.random() < 0.5:
-            _,w_ = image.shape
+            _,w,_ = image.shape
             image = image[:,::-1,:]
             bboxes[:,[0,2]] = w - bboxes[:,[2,0]]
         return image,bboxes
@@ -107,7 +108,7 @@ class Dataset(object):
             raise KeyError("s% does not exist"%image_path)
 
         image = np.array(cv2.imread(image_path))
-        bboxes = np.array(list(map(lambda x:int(float(x)),box.split(','))) for box in line[1:])
+        bboxes = np.array([list(map(lambda x:int(float(x)),box.split(','))) for box in line[1:]])
 
         if self.data_aug:
             image,bboxes = self.random_horizotal_flip(np.copy(image),np.copy(bboxes))
@@ -130,10 +131,10 @@ class Dataset(object):
         boxes2_area = boxes2[...,2] * boxes2[...,3]
 
         #[x,y,h,w] -> [x_min,y_min,x_max,y_max]
-        boxes1 = np.concatenate([boxes1[...,:2] - boxes1[...,2:] * 0.5],
-                                [boxes1[...,:2] + boxes1[...,2:] * 0.5],axis = -1)
-        boxes2 = np.concatenate([boxes2[...,:2] - boxes2[...,2:] * 0.5],
-                                [boxes2[...,:2] + boxes2[...,2:] * 0.5],axis = -1)
+        boxes1 = np.concatenate([boxes1[...,:2] - boxes1[...,2:] * 0.5,
+                                 boxes1[...,:2] + boxes1[...,2:] * 0.5],axis = -1)
+        boxes2 = np.concatenate([boxes2[...,:2] - boxes2[...,2:] * 0.5,
+                                 boxes2[...,:2] + boxes2[...,2:] * 0.5],axis = -1)
 
         left_up = np.maximum(boxes1[...,:2],boxes2[...,:2])
         right_down = np.minimum(boxes1[...,2:],boxes2[...,2:])
@@ -161,7 +162,7 @@ class Dataset(object):
         bboxes_xywh = [np.zeros((self.max_bbox_per_scale,4)) for i in range(3)]
         bbox_count = np.zeros((3,))
 
-        for box in bboxes:
+        for bbox in bboxes:
             bbox_coor = bbox[:4]
             bbox_class_id = bbox[4]
 
@@ -171,8 +172,8 @@ class Dataset(object):
             deta = 0.01
             smooth_onehot = onehot * (1 - deta) + deta * uniform_distribution
 
-            bbox_xywh = np.concatenate([(bbox_coor[:2] + bbox_coor[2:]) * 0.5],
-                                        [np.abs(bbox_coor[2:] - bbox_coor[:2])],axis = -1)
+            bbox_xywh = np.concatenate([(bbox_coor[:2] + bbox_coor[2:]) * 0.5,
+                                        np.abs(bbox_coor[2:] - bbox_coor[:2])],axis = -1)
             bbox_xywh_scale = 1.0 * bbox_xywh[np.newaxis,:] / self.strides[:,np.newaxis]
 
             iou = []
@@ -226,10 +227,9 @@ class Dataset(object):
 
     def __next__(self):
         with tf.device('/cpu:0'):
-            self.train_input_size = random.choice(self.train_input_sizes)
             self.train_output_size = self.train_input_sizes // self.strides
 
-            batch_images = np.zeros((self.batch_size,self.train_input_size,train_input_size,3),dtype=np.float32)
+            batch_images = np.zeros((self.batch_size,self.train_input_size,self.train_input_size,3),dtype=np.float32)
             batch_label_sbbox = np.zeros((self.batch_size,self.train_output_size[0],self.train_output_size[0],self.anchor_per_scale,
                                           self.num_classes+5),dtype = np.float32)
             batch_label_mbbox = np.zeros((self.batch_size,self.train_output_size[1],self.train_output_size[1],self.anchor_per_scale,
@@ -250,7 +250,7 @@ class Dataset(object):
 
                     annotation = self.annotations[index]
                     image,bboxes = self.parse_annotation(annotation)
-                    label_sbbox,load_mbbox,label_lbbox,sbboxes,mbboxes,lbboxes = self.preprocess_true_boxes(bboxes)
+                    label_sbbox,label_mbbox,label_lbbox,sbboxes,mbboxes,lbboxes = self.preprocess_true_boxes(bboxes)
 
                     batch_images[num,...] = image
                     batch_label_sbbox[num,...] = label_sbbox
