@@ -190,7 +190,7 @@ def load_weights(model,weights_file):
             #darknet:[beta,gamma,mean,variance]
             bn_weights = np.fromfile(weight_file,dtype=np.float32,count=4*filters)
             #tensorflow:[gamma,beta,mean,variance]
-            bn_weights = bn_weights.reshape(4,filters)[[1,0,2,3]]
+            bn_weights = bn_weights.reshape((4,filters))[[1,0,2,3]]
             bn_layer = model.get_layer(bn_layer_name)
             j += 1
         else:
@@ -198,7 +198,7 @@ def load_weights(model,weights_file):
 
         #darknet:[out_ch,in_ch,h,w]
         conv_shape = (filters,input_channels,k_size,k_size)
-        conv_weight = np.fromfile(wf,dtype=np.float32,count=np.product(conv_shape))
+        conv_weight = np.fromfile(weight_file,dtype=np.float32,count=np.product(conv_shape))
         #tensorflow:[h,w,in_ch,out_ch]
         conv_weight = conv_weight.reshape(conv_shape).transpose([2,3,1,0])
 
@@ -208,8 +208,8 @@ def load_weights(model,weights_file):
         else:
             conv_layer.set_weights([conv_weight,conv_bias])
 
-    assert len(wf.read()) == 0
-    wf.close()
+    assert len(weight_file.read()) == 0
+    weight_file.close()
 
 def postprocess_boxes(pred_bbox,org_img_shape,input_size,score_threshold):
     """
