@@ -54,7 +54,7 @@ def image_preprocess(image,target_size,get_boxes = None):
     new_h,new_w = int(ratio*s_h),int(ratio*s_w)
     new_image = cv2.resize(image,(new_w,new_h))
 
-    mask = np.full(shape = [t_h,t_w,3],128.0)
+    mask = np.full((t_h,t_w,3),128.0)
     dh,dw = (t_h - new_h) // 2,(t_w - new_w) // 2
     mask[dh:dh+new_h,dw:dw+new_w,:] = new_image
     image_padd = mask / 255.0
@@ -174,7 +174,7 @@ def nms(bboxes,iou_threshold,sigma = 0.3,method = 'nms'):
 def load_weights(model,weights_file):
 
     weight_file = open(weights_file,'rb')
-    major,minor,revision,seen,_ = np.fromfile(weight_file.dtype=np.int32,count=5)
+    major,minor,revision,seen,_ = np.fromfile(weight_file,dtype=np.int32,count=5)
 
     j = 0
     for i in range(75):
