@@ -154,7 +154,7 @@ def bbox_giou(boxes1,boxes2):
 
     return gious
 
-def loss_layer(conv,pred,label,bboxes,stride):
+def loss_layer(conv,pred,label,bboxes,i = 0):
     """
     Argument:
         conv: 
@@ -162,7 +162,7 @@ def loss_layer(conv,pred,label,bboxes,stride):
     conv_shape = tf.shape(conv)
     batch_size = conv_shape[0]
     output_size = conv_shape[1]
-    input_size = output_size * stride
+    input_size = output_size * STRIDES[i]
     conv = tf.reshape(conv,(batch_size,output_size,output_size,3,5 + NUM_CLASS))
 
     conv_raw_conf = conv[...,4:5]
