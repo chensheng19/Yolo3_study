@@ -16,8 +16,18 @@ def getConfig(config_file = "./config.ini"):
     parser = configparser.ConfigParser()
     parser.read(config_file)
 
-    _conf_yolo = [(key,value) for key,value in parser.items("yolo")]
-    _conf_train = [(key,value) for key,value in parser.items("train")]
-    _conf_test = [(key,value) for key,value in parser.items("test")]
+    _conf_str = [(key,str(value)) for key,value in parser.items("strings")]
+    _conf_int = [(key,int(value)) for key,value in parser.items("ints")]
+    _conf_float = [(key,float(value)) for key,value in parser.items("floats")]
+    mid_list= [(key,value) for key,value in parser.items("lists")]
+    _conf_list = []
+    for i in range(len(mid_list)):
+        key = mid_list[i][0]
+        value = mid_list[i][1]
+        value = value.strip('[[]]')
+        value = [int(x) for x in value.split(',')]
+        mid = (key,value)
+        _conf_list.append(mid)
     
-    return dict(_conf_yolo + _conf_train + _conf_test)
+    return dict(_conf_str + _conf_int + _conf_float + _conf_list)
+    
