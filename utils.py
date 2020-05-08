@@ -257,7 +257,41 @@ def postprocess_boxes(pred_bbox,org_img_shape,input_size,score_threshold):
     return np.concatenate([coors, scores[:, np.newaxis], classes[:, np.newaxis]], axis=-1)
 
 
+def load_partial_weights(model,weights_file):
 
+    weight_file = open(weights_file,'rb')
+    major,minor,revision,seen,_ = np.fromfile(weight_file,dtype=np.int32,count=5)
+
+    j = 0
+    for i in range(75):
+        conv_layer_name = 'conv2d_%d' % i if i > 0 else 'conv2d'
+        bn_layer_name = 'batch_normalization_%d' % j if j > 0 else 'batch_normalization'
+
+        conv_layer = model.get_layer(conv_layer_name)
+        filters = conv_layer.filters
+        k_size = conv_layer.kernel_size[0]
+        input_channels = conv_layer.input_shape[-1]
+            
+        if i in [58,66,74]:
+            conv_bias = np.fromfile(weight_file,dtype=np.float32,count=255)
+            conv_shape = (255,input_channels,k_size,k_size)
+            conv_weight = np.fromfile(weight_file,dtype=np.float32,count=np.product(conv_shape))
+        else:
+            #darknet:[beta,gamma,mean,variance]
+            bn_weights = np.fromfile(weight_file,dtype=np.float32,count=4*filters)
+            #tensorflow:[gamma,beta,mean,variance]
+            bn_weights = bn_weights.reshape((4,filters))[[1,0,2,3]]
+            bn_layer = model.get_layer(bn_layer_name)
+            j += 1
+            #darknet:[out_ch,in_ch,h,w]
+            conv_shape = (filters,input_channels,k_size,k_size)
+            conv_weight = np.fromfile(weight_file,dtype=np.float32,count=np.product(conv_shape))
+            #tensorflow:[h,w,in_ch,out_ch]
+            conv_weight = conv_weight.reshape(conv_shape).transpose([2,3,1,0])
+            conv_layer.set_weights([conv_weight])
+            bn_layer.set_weights(bn_weights)
+    assert len(weight_file.read()) == 0, 'failed to read all data'
+    weight_file.close()
 
 
 
