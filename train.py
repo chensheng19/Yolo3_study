@@ -42,6 +42,19 @@ for i,conv_tensor in enumerate(conv_tensors):
     output_tensor.append(pred_tensor)
 
 model = tf.keras.Model(input_tensor,output_tensor)
+
+utils.load_partial_weights(model,"./yolov3.weights")
+
+for layer in model.layers[0:58]:
+    layer.trainable = False
+
+for layer in model.layers[59:66]:
+    layer.trainable = False
+    
+for layer in model.layers[67:74]:
+    layer.trainable = False
+model.summary()
+
 opt = tf.keras.optimizers.Adam()
 
 if os.path.exists(logdir):
@@ -87,7 +100,7 @@ def train_step(image_data,target):
 for epoch in range(cfg['train_epochs']):
     for image_data,*target in trainset:
         train_step(image_data,target)
-    model.save_weights("./yolo3")
+    model.save_weights("./model_dir/yolo3")
 
 
 
