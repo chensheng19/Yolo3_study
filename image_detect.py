@@ -19,7 +19,7 @@ import utils
 from PIL import Image
 
 input_size = 416
-image_path = "./predict_image/hourse.jpg"
+image_path = "./predict_image/000012.jpg"
 
 input_layer = tf.keras.layers.Input([input_size,input_size,3])
 feature_maps = yolo3(input_layer)
@@ -37,29 +37,15 @@ for i,fm in enumerate(feature_maps):
     bbox_tensors.append(bbox_tensor)
 
 model = tf.keras.Model(input_layer,bbox_tensors)
-utils.load_weights(model,"./model_dir/yolov3")
+model.load_weights("./model_dir/yolo3")
 model.summary()
 
 pred_bbox = model.predict(image_data)
 pred_bbox = [tf.reshape(x,(-1,tf.shape(x)[-1])) for x in pred_bbox]
 pred_bbox = tf.concat(pred_bbox,axis=0)
-bboxes = utils.postprocess_boxes(pred_bbox,original_image_size,input_size,0.3)
-bboxes = utils.nms(bboxes,0.45,'nms')
+bboxes = utils.postprocess_boxes(pred_bbox,original_image_size,input_size,0.1)
+bboxes = utils.nms(bboxes,0.1)
 
 image = utils.draw_bbox(original_image,bboxes)
 image = Image.fromarray(image)
 image.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
