@@ -37,14 +37,14 @@ for i,fm in enumerate(feature_maps):
     bbox_tensors.append(bbox_tensor)
 
 model = tf.keras.Model(input_layer,bbox_tensors)
-utils.load_weights(model,"./yolov3.weights")
+utils.load_weights(model,"./model_dir/yolov3")
 model.summary()
 
 pred_bbox = model.predict(image_data)
-pred_bbox = [tf.reshape(x,tf.shape(x)[-1]) for x in pred_bbox]
+pred_bbox = [tf.reshape(x,(-1,tf.shape(x)[-1])) for x in pred_bbox]
 pred_bbox = tf.concat(pred_bbox,axis=0)
 bboxes = utils.postprocess_boxes(pred_bbox,original_image_size,input_size,0.3)
-bboxes = utils.nms(bboxes,0.45)
+bboxes = utils.nms(bboxes,0.45,'nms')
 
 image = utils.draw_bbox(original_image,bboxes)
 image = Image.fromarray(image)
