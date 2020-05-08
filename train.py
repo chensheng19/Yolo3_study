@@ -63,7 +63,7 @@ writer = tf.summary.create_file_writer(logdir)
 
 def train_step(image_data,target):
     with tf.GradientTape() as tape:
-        pred_result = model(image_data,training = True)
+        pred_result = model(image_data)
         giou_loss = conf_loss = prob_loss = 0
 
         for i in range(3):
@@ -87,7 +87,8 @@ def train_step(image_data,target):
         else:
             lr = cfg['train_learning_rate_end'] + 0.5 *(cfg['train_learning_rate_init'] - cfg['train_learning_rate_end']) * (
                     1 + tf.cos((global_steps - warmup_steps) / (total_steps - warmup_steps) * np.pi))
-
+        opt.lr.assign(lr.numpy())
+        
         with writer.as_default():
             tf.summary.scalar("lr",opt.lr,step = global_steps)
             tf.summary.scalar("loss/total_loss",total_loss,step = global_steps)
@@ -101,9 +102,6 @@ for epoch in range(cfg['train_epochs']):
     for image_data,*target in trainset:
         train_step(image_data,target)
     model.save_weights("./model_dir/yolo3")
-
-
-
 
 
 
